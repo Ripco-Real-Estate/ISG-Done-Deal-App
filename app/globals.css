@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy-900: #070f1d;
+  --navy-800: #0c1a2e;
+  --gold: #c9a24b;
+  --gold-bright: #e0bd66;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--navy-900);
+  color: #eef2f7;
+  font-family: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+}

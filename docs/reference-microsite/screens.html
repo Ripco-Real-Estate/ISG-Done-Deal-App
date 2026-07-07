@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>App screens — The ISG Product System</title>
+<meta name="description" content="Key screens of the Claude-built ISG application that replaces the native Monday CRM.">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .screens-hero{padding:70px 0 24px;text-align:center}
+  .screens-hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.3rem,5vw,3.6rem);line-height:1.05;margin-bottom:16px}
+  .screens-hero p{color:var(--muted);font-size:1.1rem;max-width:64ch;margin:0 auto}
+  .shot-block{padding:46px 0;border-top:1px solid var(--line-soft)}
+  .shot-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:20px;flex-wrap:wrap}
+  .shot-head .lhs{max-width:64ch}
+  .shot-head .num{font-family:var(--serif);color:var(--gold);font-size:.9rem;letter-spacing:.16em}
+  .shot-head h2{font-family:var(--serif);font-weight:500;font-size:1.85rem;margin:6px 0 8px;letter-spacing:-.01em}
+  .shot-head p{color:var(--muted);font-size:1rem}
+  .shot-head .meta{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600;border:1px solid var(--line);background:var(--gold-soft);padding:6px 12px;border-radius:30px;white-space:nowrap}
+  /* browser chrome frame */
+  .frame{background:#0f2138;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 30px 70px -30px rgba(0,0,0,.8)}
+  .frame .bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#0a1424;border-bottom:1px solid var(--line-soft)}
+  .frame .bar .tl{display:flex;gap:6px}
+  .frame .bar .tl i{width:11px;height:11px;border-radius:50%;display:block}
+  .frame .bar .tl i:nth-child(1){background:#e2445c}.frame .bar .tl i:nth-child(2){background:#fdab3d}.frame .bar .tl i:nth-child(3){background:#00c875}
+  .frame .bar .url{margin-left:12px;flex:1;background:#070f1d;border:1px solid var(--line-soft);border-radius:7px;color:var(--muted-dim);font-size:.78rem;padding:6px 12px;font-family:var(--sans)}
+  .frame .bar .url b{color:var(--gold)}
+  .frame .glass{padding:16px;background:radial-gradient(120% 120% at 50% 0,#13263d,#0c1a2e)}
+  .frame .app{zoom:1.28}
+  .app .main{background:#fff}
+  /* canvassing map */
+  .mapwrap{display:flex;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--b-line)}
+  .mapwrap .targets{width:210px;flex:none;border-right:1px solid var(--b-line);background:#f4f6fa;font-size:11px}
+  .mapwrap .targets .th{padding:10px 12px;border-bottom:1px solid var(--b-line);font-weight:700;color:var(--st-navy);display:flex;justify-content:space-between;align-items:center}
+  .mapwrap .targets .filt{padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--b-line)}
+  .mapwrap .targets .filt .f{font-size:9.5px;font-weight:600;padding:3px 8px;border-radius:20px;background:#fff;border:1px solid var(--b-line);color:var(--b-muted)}
+  .mapwrap .targets .filt .f.on{background:var(--st-navy);color:#fff;border-color:var(--st-navy)}
+  .mapwrap .targets .ti{padding:8px 12px;border-bottom:1px solid var(--b-line);cursor:pointer}
+  .mapwrap .targets .ti.sel{background:#fff;box-shadow:inset 3px 0 0 var(--gold)}
+  .mapwrap .targets .ti .nm{font-weight:700;color:var(--b-ink)}
+  .mapwrap .targets .ti .sub{color:var(--b-muted)}
+  .mapwrap .map{flex:1;position:relative;min-height:340px;background:#dce4e6}
+  .mapwrap .map .legend{position:absolute;top:12px;right:12px;background:#fff;border:1px solid var(--b-line);border-radius:8px;padding:9px 11px;font-size:10px;color:var(--b-ink);box-shadow:0 6px 18px -8px rgba(0,0,0,.3);z-index:3}
+  .mapwrap .map .legend .lr{display:flex;align-items:center;gap:6px;margin:3px 0}
+  .mapwrap .map .legend i{width:9px;height:9px;border-radius:50%;display:block}
+  .mapwrap .map .pop{position:absolute;left:50%;top:42%;transform:translate(-50%,-110%);background:#fff;border:1px solid var(--b-line);border-radius:9px;padding:10px 12px;width:210px;box-shadow:0 14px 30px -12px rgba(0,0,0,.45);z-index:4;font-size:11px}
+  .mapwrap .map .pop h5{font-size:12px;color:var(--st-navy);margin-bottom:5px}
+  .mapwrap .map .pop .r{display:flex;justify-content:space-between;color:var(--b-muted);padding:2px 0}
+  .mapwrap .map .pop .r b{color:var(--b-ink)}
+  .mapwrap .map .pop .cta{margin-top:7px;background:var(--st-navy);color:#fff;text-align:center;border-radius:6px;padding:5px;font-weight:700}
+  .mapwrap .map .pin{position:absolute;width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 3px 6px rgba(0,0,0,.3);z-index:2}
+</style>
+</head>
+<body>
+
+<div class="promo">ISG Product System — A Claude-built application on Monday <span>· Key screens · purpose-built UI on Monday server-side</span></div>
+<header class="nav"><div class="nav-inner">
+  <a href="index.html" class="brand"><span class="mark">R</span><span>RIPCO<br><small>ISG Product System</small></span></a>
+  <nav class="nav-links"><a href="index.html">Products</a><a href="index.html#apps">Apps</a><a href="index.html#agents">Agents</a><a href="index.html#data">Data</a><a href="index.html#platform">Platform</a><a href="screens.html" class="active">Screens</a></nav>
+  <div class="nav-cta"><a class="btn btn-gold" href="spec.md">Product spec</a></div>
+</div></header>
+
+<main class="wrap">
+
+  <section class="screens-hero">
+    <span class="eyebrow">Key screens</span>
+    <h1>The application, screen by screen</h1>
+    <p>A selection of the Claude-built ISG application that replaces the native Monday CRM. Every screen reads and writes the same Monday boards underneath — these are illustrative mockups of the new broker-facing UI.</p>
+  </section>
+
+  <!-- 1 PIPELINE -->
+  <section class="shot-block">
+    <div class="shot-head"><div class="lhs"><div class="num">01</div><h2>Pipeline</h2><p>The deal board, rebuilt for ISG: every listing and pitch by stage, with owner, ask, and risk — replacing the generic Monday board view.</p></div><span class="meta">Replaces · Monday board</span></div>
+    <div class="frame"><div class="bar"><span class="tl"><i></i><i></i><i></i></span><span class="url">app.ripco.isg / <b>pipeline</b></span></div>
+      <div class="glass"><div class="app">
+        <div class="side"><div class="lg"><i></i>RIPCO ISG</div>
+          <div class="grp-lbl">Deals</div><a class="on">Pipeline</a><a>All listings</a><a>Pitches</a><a>Needs attention</a>
+          <div class="grp-lbl">Network</div><a>Owners</a><a>Buyers</a>
+          <div class="grp-lbl">Map</div><a>Canvassing</a></div>
+        <div class="main">
+          <div class="hd"><h4>Pipeline</h4><span class="crumb">· 41 deals</span><span class="pill navy" style="margin-left:auto">New deal</span></div>
+          <div class="content" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+            <div><div class="grp-h"><span class="bar"></span>Lead <span class="ct">22</span></div>
+              <div class="row" style="display:block"><div class="nm">945 Madison Ave</div><div class="sub">Crescent · $42M Refi</div></div>
+              <div class="row" style="display:block"><div class="nm">Oakline Plaza</div><div class="sub">Pacific · $18.5M</div></div>
+              <div class="row" style="display:block"><div class="nm">Riverside Retail</div><div class="sub">Meridian · $12.4M</div></div>
+            </div>
+            <div><div class="grp-h orange"><span class="bar"></span>In-Market <span class="ct">7</span></div>
+              <div class="row" style="display:block"><div class="nm">176 Gold Street</div><div class="sub">Golub · $31.7M</div></div>
+              <div class="row" style="display:block"><div class="nm">Mesa Crossing</div><div class="sub">Silverpeak · $12.4M</div></div>
+            </div>
+            <div><div class="grp-h purple"><span class="bar"></span>Fielding Offers <span class="ct">5</span></div>
+              <div class="row" style="display:block"><div class="nm">Harbor Point</div><div class="sub">4 offers · $31.8M top</div></div>
+              <div class="row" style="display:block"><div class="nm">Union Warehouse</div><div class="sub">2 offers · $22.5M</div></div>
+            </div>
+            <div><div class="grp-h green"><span class="bar"></span>In Contract <span class="ct">3</span></div>
+              <div class="row" style="display:block"><div class="nm">Cedar Bend</div><div class="sub">Orchard · $36.4M</div></div>
+              <div class="row" style="display:block"><div class="nm">Bergen Ind.</div><div class="sub">Lucas · $5.49M</div></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 2 DEAL DETAIL -->
+  <section class="shot-block">
+    <div class="shot-head"><div class="lhs"><div class="num">02</div><h2>Deal detail</h2><p>One listing, one screen: overview, leads, offers, activity, and files — instead of hunting across boards and subitems.</p></div><span class="meta">New · unified deal view</span></div>
+    <div class="frame"><div class="bar"><span class="tl"><i></i><i></i><i></i></span><span class="url">app.ripco.isg / deals / <b>176-gold-street</b></span></div>
+      <div class="glass"><div class="app">
+        <div class="side"><div class="lg"><i></i>RIPCO ISG</div><div class="grp-lbl">Deal</div><a class="on">Overview</a><a>Leads</a><a>Offers</a><a>Activity</a><a>Files</a></div>
+        <div class="main">
+          <div class="hd"><h4>176 Gold Street</h4><span class="pill orange" style="margin-left:auto">In-Market</span></div>
+          <div class="content">
+            <div style="color:var(--b-muted);margin-bottom:10px">Hotel · New York, NY · $31.7M ask · Owner: Golub Holdings LLC · EA signed 4.0% · 12-mo term</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+              <div class="row" style="display:block"><div class="sub">Leads</div><div class="nm" style="font-size:14px">38</div></div>
+              <div class="row" style="display:block"><div class="sub">Tours</div><div class="nm" style="font-size:14px">12</div></div>
+              <div class="row" style="display:block"><div class="sub">Offers</div><div class="nm" style="font-size:14px;color:var(--st-green)">4</div></div>
+              <div class="row" style="display:block"><div class="sub">Top offer</div><div class="nm" style="font-size:14px">$31.8M</div></div>
+            </div>
+            <div class="grp-h navy"><span class="bar"></span>Recent activity</div>
+            <div class="row" style="background:#fff;border-bottom:1px solid var(--b-line);border-radius:0"><span class="av b">GC</span><span class="nm">Offer received — Golub Capital · $31.8M</span><span class="pill green">18m</span></div>
+            <div class="row" style="background:#fff;border-bottom:1px solid var(--b-line);border-radius:0"><span class="av c">RP</span><span class="nm">Redwood requested rent roll</span><span class="pill orange">2h</span></div>
+            <div class="row" style="background:#fff;border-radius:0"><span class="nm sub">OM shared with 1,240 buyers</span><span class="pill blue">1d</span></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 3 LEADS -->
+  <section class="shot-block">
+    <div class="shot-head"><div class="lhs"><div class="num">03</div><h2>Leads Tracker</h2><p>Every interested party connected to the listing, categorized by offer, interest, outreach, and passed — with offer terms on the card.</p></div><span class="meta">Replaces · Leads board</span></div>
+    <div class="frame"><div class="bar"><span class="tl"><i></i><i></i><i></i></span><span class="url">app.ripco.isg / deals / 176-gold-street / <b>leads</b></span></div>
+      <div class="glass"><div class="app">
+        <div class="side"><div class="lg"><i></i>RIPCO ISG</div><div class="grp-lbl">Leads</div><a class="on">By status</a><a>All leads</a><a>Offers</a><a>Import</a></div>
+        <div class="main"><div class="hd"><h4>Leads · 176 Gold Street</h4><span class="crumb">· 38</span></div>
+          <div class="content" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+            <div><div class="grp-h green"><span class="bar"></span>Active offers <span class="ct">4</span></div>
+              <div class="row" style="display:block"><div class="nm">Golub Capital</div><div class="sub">$31.8M · 10% · 30d</div></div>
+              <div class="row" style="display:block"><div class="nm">Redwood</div><div class="sub">$30.2M · 5% · 45d</div></div></div>
+            <div><div class="grp-h orange"><span class="bar"></span>Interested <span class="ct">9</span></div>
+              <div class="row" style="display:block"><div class="nm">Silverpeak</div><div class="sub">Toured 6/12</div></div>
+              <div class="row" style="display:block"><div class="nm">Atlas Lenders</div><div class="sub">Req. OM</div></div></div>
+            <div><div class="grp-h blue"><span class="bar" style="background:var(--st-blue)"></span>Outreach <span class="ct">18</span></div>
+              <div class="row" style="display:block"><div class="nm">Boulder Lending</div><div class="sub">E-blast opened</div></div>
+              <div class="row" style="display:block"><div class="nm">Orchard Bank</div><div class="sub">No reply</div></div></div>
+            <div><div class="grp-h red"><span class="bar"></span>Passed <span class="ct">7</span></div>
+              <div class="row" style="display:block"><div class="nm">Blue Ridge</div><div class="sub">Price</div></div></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 4 CRM -->
+  <section class="shot-block">
+    <div class="shot-head"><div class="lhs"><div class="num">04</div><h2>CRM contact</h2><p>A relationship record that speaks ISG: role, linked deals, ownership, and auto-captured activity from inbox and Zoom.</p></div><span class="meta">Replaces · Clients board</span></div>
+    <div class="frame"><div class="bar"><span class="tl"><i></i><i></i><i></i></span><span class="url">app.ripco.isg / network / <b>maya-whitman</b></span></div>
+      <div class="glass"><div class="app">
+        <div class="side"><div class="lg"><i></i>RIPCO ISG</div><div class="grp-lbl">Contact</div><a class="on">Profile</a><a>Activity</a><a>Deals</a><a>Portfolio</a></div>
+        <div class="main"><div class="hd"><h4>Maya Whitman</h4><span class="pill green" style="margin-left:auto">Owner</span></div>
+          <div class="content">
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px"><span class="av a" style="width:34px;height:34px;font-size:13px">MW</span><div><div style="font-weight:700">Managing Partner · Northline Capital</div><div style="color:var(--b-muted)">maya@northline.com · (212) 555-0186</div></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div><div class="grp-h navy"><span class="bar"></span>Linked deals</div>
+                <div class="row"><span class="nm">176 Gold Street</span><span class="pill orange">In-Market</span></div>
+                <div class="row"><span class="nm">945 Madison Ave</span><span class="pill blue">Pitching</span></div>
+                <div class="row"><span class="nm">Harbor Point</span><span class="pill green">In Contract</span></div></div>
+              <div><div class="grp-h gold"><span class="bar"></span>Activity</div>
+                <div class="row"><span class="nm sub">✉ Email · 176 Gold pricing</span><span class="pill gray">today</span></div>
+                <div class="row"><span class="nm sub">▶ Zoom · listing review</span><span class="pill gray">6/4</span></div>
+                <div class="row"><span class="nm sub">✓ Tour · 945 Madison</span><span class="pill gray">5/28</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 5 OM EXTRACTOR -->
+  <section class="shot-block">
+    <div class="shot-head"><div class="lhs"><div class="num">05</div><h2>OM Extractor (agent)</h2><p>Drop in an OM and the agent returns source-cited fields, routes conflicts to review, and pushes clean data back to Monday.</p></div><span class="meta">Agent · source-backed</span></div>
+    <div class="frame"><div class="bar"><span class="tl"><i></i><i></i><i></i></span><span class="url">app.ripco.isg / deals / harbor-point / <b>extract</b></span></div>
+      <div class="glass"><div class="app">
+        <div class="side"><div class="lg"><i></i>RIPCO ISG</div><div class="grp-lbl">Agent</div><a class="on">Deal facts</a><a>Sources</a><a>Exceptions</a></div>
+        <div class="main"><div class="hd"><h4>OM Extractor · Harbor Point</h4></div>
+          <div class="content" style="display:grid;grid-template-columns:1.2fr 1fr;gap:12px">
+            <div><div style="margin-bottom:8px"><span class="chip-file">Harbor_Point_OM.pdf</span> <span class="chip-file">Rent_Roll.xlsx</span></div>
+              <table class="tbl">
+                <tr><th>Field</th><th>Value</th><th>Source</th></tr>
+                <tr><td>NOI</td><td class="num">$2.8M</td><td style="color:var(--b-muted)">OM p.12</td></tr>
+                <tr><td>Cap rate</td><td class="num">5.4%</td><td style="color:var(--b-muted)">OM p.4</td></tr>
+                <tr><td>Units</td><td class="num">184</td><td style="color:var(--b-muted)">Rent roll</td></tr>
+                <tr><td>Asking price</td><td class="num">$31.7M</td><td style="color:var(--b-muted)">OM p.1</td></tr>
+              </table></div>
+            <div class="chat" style="border:1px solid var(--b-line);border-radius:8px">
+              <div class="worked">Extracted 14 fields</div>
+              <div class="a" style="margin-bottom:6px">Each value links back to its source page.</div>
+              <div class="row"><span class="nm">Occupancy — OM 94% vs roll 91%</span><span class="pill orange">Review</span></div>
+              <div class="row"><span class="nm">Push to Monday</span><span class="pill gold">Ready</span></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 6 LOI -->
+  <section class="shot-block">
+    <div class="shot-head"><div class="lhs"><div class="num">06</div><h2>LOI Comparison (agent)</h2><p>Multiple LOIs normalized into one table with a net-to-seller read, a recommendation, and flagged clauses.</p></div><span class="meta">Agent · decision support</span></div>
+    <div class="frame"><div class="bar"><span class="tl"><i></i><i></i><i></i></span><span class="url">app.ripco.isg / deals / 176-gold-street / <b>offers / compare</b></span></div>
+      <div class="glass"><div class="app">
+        <div class="side"><div class="lg"><i></i>RIPCO ISG</div><div class="grp-lbl">Offers</div><a>Active</a><a class="on">Compare</a><a>Recommendation</a></div>
+        <div class="main"><div class="hd"><h4>LOI Comparison · 176 Gold Street</h4></div>
+          <div class="content" style="display:grid;grid-template-columns:1.3fr 1fr;gap:12px">
+            <table class="tbl">
+              <tr><th>Term</th><th>Golub</th><th>Redwood</th><th>Silverpeak</th></tr>
+              <tr><td>Price</td><td class="num"><b>$31.8M</b></td><td class="num">$30.2M</td><td class="num">$29.5M</td></tr>
+              <tr><td>Deposit</td><td class="num">10%</td><td class="num">5%</td><td class="num">7.5%</td></tr>
+              <tr><td>DD</td><td class="num">30d</td><td class="num">45d</td><td class="num">30d</td></tr>
+              <tr><td>Financing</td><td class="num">None</td><td class="num neg">Contingent</td><td class="num">None</td></tr>
+              <tr><td>Net to seller</td><td class="num"><b>$30.5M</b></td><td class="num">$28.4M</td><td class="num">$28.6M</td></tr>
+            </table>
+            <div class="chat" style="border:1px solid var(--b-line);border-radius:8px">
+              <div class="worked">Recommendation</div>
+              <div class="a">Golub leads on price and certainty — hard deposit, no contingency, 60-day close. Recommend Golub; Silverpeak as backup.</div>
+              <div class="row" style="margin-top:6px"><span class="nm">Redwood — financing contingency</span><span class="pill red">Flag</span></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 7 STATUS REPORT -->
+  <section class="shot-block">
+    <div class="shot-head"><div class="lhs"><div class="num">07</div><h2>Status Report</h2><p>A branded, owner-ready progress report generated live from Pipeline and Leads — no manual rebuild.</p></div><span class="meta">Output · .docx</span></div>
+    <div class="frame"><div class="bar"><span class="tl"><i></i><i></i><i></i></span><span class="url">app.ripco.isg / deals / 176-gold-street / <b>report</b></span></div>
+      <div class="glass" style="display:grid;grid-template-columns:1fr 1.1fr;gap:16px;align-items:start">
+        <div class="app"><div class="side"><div class="lg"><i></i>RIPCO ISG</div><div class="grp-lbl">Reports</div><a class="on">Generate</a><a>Recent</a><a>Schedule</a></div>
+          <div class="main"><div class="hd"><h4>Generate report</h4></div><div class="content">
+            <div class="row"><span class="nm sub">Source · Pipeline</span><span class="pill green">Live</span></div>
+            <div class="row"><span class="nm sub">Source · Leads Tracker</span><span class="pill green">Live</span></div>
+            <div class="row"><span class="nm sub">Marketing stats</span><span class="pill green">Synced</span></div>
+            <div class="row"><span class="nm sub">Template · ISG navy/gold</span><span class="pill navy">.docx</span></div>
+            <div class="row"><span class="nm sub">Cadence</span><span class="pill blue">Weekly · Mon</span></div>
+            <div class="row"><span class="nm sub">Generate</span><span class="pill gold">Run</span></div>
+          </div></div></div>
+        <div style="background:#0c1a2e;border:1px solid #1d3550;border-radius:10px;overflow:hidden;color:#fff">
+          <div style="padding:16px 18px;border-bottom:1px solid #1d3550"><div style="color:var(--gold);font-size:9px;letter-spacing:.2em;text-transform:uppercase;font-weight:700">RIPCO · Investment Sales Group</div><div style="font-family:var(--serif);font-size:18px;margin-top:3px">Listing Progress Report</div><div style="color:#9fb0c4;font-size:11px">176 Gold Street · June 22, 2026</div></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#1d3550;margin:14px 18px;border-radius:8px;overflow:hidden">
+            <div style="background:#0f2138;padding:11px;text-align:center"><div style="font-family:var(--serif);font-size:18px">38</div><div style="color:#9fb0c4;font-size:9px">Leads</div></div>
+            <div style="background:#0f2138;padding:11px;text-align:center"><div style="font-family:var(--serif);font-size:18px">12</div><div style="color:#9fb0c4;font-size:9px">Tours</div></div>
+            <div style="background:#0f2138;padding:11px;text-align:center"><div style="font-family:var(--serif);font-size:18px;color:var(--gold-bright)">4</div><div style="color:#9fb0c4;font-size:9px">Offers</div></div>
+            <div style="background:#0f2138;padding:11px;text-align:center"><div style="font-family:var(--serif);font-size:16px">$31.8M</div><div style="color:#9fb0c4;font-size:9px">Top</div></div>
+          </div>
+          <div style="padding:0 18px 16px;font-size:12px;color:#9fb0c4">
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #15293f"><span>OM distributed</span><span style="color:#fff">1,240 buyers</span></div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #15293f"><span>E-blast open rate</span><span style="color:#fff">62%</span></div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0"><span>Showings this week</span><span style="color:#fff">5</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 CANVASSING -->
+  <section class="shot-block" id="canvassing">
+    <div class="shot-head"><div class="lhs"><div class="num">08</div><h2>Canvassing Map</h2><p>The existing Esri/ArcGIS embed from Monday, surfaced in-app: parcels, ownership overlays, and prospect pins that convert straight into pitches.</p></div><span class="meta">App · Esri / ArcGIS</span></div>
+    <div class="frame"><div class="bar"><span class="tl"><i></i><i></i><i></i></span><span class="url">app.ripco.isg / <b>canvassing</b> · Esri embed</span></div>
+      <div class="glass"><div class="mapwrap">
+        <div class="targets">
+          <div class="th">Canvass targets <span class="pill navy" style="font-size:9px">SoHo</span></div>
+          <div class="filt"><span class="f on">All</span><span class="f">Maturing</span><span class="f">New owner</span><span class="f">Off-market</span></div>
+          <div class="ti sel"><div class="nm">60 Greene Street</div><div class="sub">Retail · Golub Holdings · last sale 2021</div></div>
+          <div class="ti"><div class="nm">225 Lafayette</div><div class="sub">Mixed · Lafayette LLC · maturing 84d</div></div>
+          <div class="ti"><div class="nm">410 W 14th</div><div class="sub">Mixed · Westfield · new owner</div></div>
+          <div class="ti"><div class="nm">133 Wooster</div><div class="sub">Retail · Wooster Assoc · off-market</div></div>
+          <div class="ti"><div class="nm">88 Prince Street</div><div class="sub">Retail · Prince Cap · maturing 120d</div></div>
+        </div>
+        <div class="map">
+          <svg viewBox="0 0 560 360" style="position:absolute;inset:0;width:100%;height:100%">
+            <rect width="560" height="360" fill="#dce4e6"/>
+            <!-- park / green block -->
+            <rect x="40" y="220" width="120" height="90" fill="#c2dcc6"/>
+            <!-- water sliver -->
+            <rect x="480" y="0" width="80" height="360" fill="#bcd3dd"/>
+            <!-- avenues -->
+            <g stroke="#c6d2d4" stroke-width="22"><line x1="120" y1="0" x2="120" y2="360"/><line x1="270" y1="0" x2="270" y2="360"/><line x1="410" y1="0" x2="410" y2="360"/></g>
+            <g stroke="#c6d2d4" stroke-width="18"><line x1="0" y1="90" x2="560" y2="90"/><line x1="0" y1="190" x2="560" y2="190"/><line x1="0" y1="290" x2="560" y2="290"/></g>
+            <!-- white street lines -->
+            <g stroke="#eef2f3" stroke-width="2"><line x1="120" y1="0" x2="120" y2="360"/><line x1="270" y1="0" x2="270" y2="360"/><line x1="410" y1="0" x2="410" y2="360"/><line x1="0" y1="90" x2="560" y2="90"/><line x1="0" y1="190" x2="560" y2="190"/><line x1="0" y1="290" x2="560" y2="290"/></g>
+            <!-- parcels (blocks) -->
+            <g fill="#cdd8da">
+              <rect x="135" y="100" width="120" height="78"/><rect x="285" y="100" width="110" height="78"/>
+              <rect x="135" y="200" width="120" height="78"/><rect x="285" y="200" width="110" height="78"/>
+              <rect x="425" y="100" width="45" height="78"/><rect x="425" y="200" width="45" height="78"/>
+            </g>
+            <!-- highlighted selected parcel -->
+            <rect x="285" y="100" width="110" height="78" fill="#f3e2b6" stroke="#c9a24b" stroke-width="2"/>
+          </svg>
+          <div class="legend"><div style="font-weight:700;margin-bottom:4px;color:var(--st-navy)">Signals</div>
+            <div class="lr"><i style="background:#e2445c"></i>Maturing debt</div>
+            <div class="lr"><i style="background:#fdab3d"></i>New owner</div>
+            <div class="lr"><i style="background:#00c875"></i>Target match</div>
+            <div class="lr"><i style="background:#579bfc"></i>Contacted</div>
+          </div>
+          <!-- pins -->
+          <span class="pin" style="left:46%;top:34%;background:#00c875"></span>
+          <span class="pin" style="left:26%;top:30%;background:#e2445c"></span>
+          <span class="pin" style="left:72%;top:30%;background:#fdab3d"></span>
+          <span class="pin" style="left:24%;top:62%;background:#579bfc"></span>
+          <span class="pin" style="left:70%;top:62%;background:#e2445c"></span>
+          <!-- popup on selected -->
+          <div class="pop"><h5>60 Greene Street</h5>
+            <div class="r"><span>Type</span><b>Retail · 11,800 SF</b></div>
+            <div class="r"><span>Owner</span><b>Golub Holdings LLC</b></div>
+            <div class="r"><span>Last sale</span><b>$18.4M · 2021</b></div>
+            <div class="r"><span>Zoning</span><b>C6-2A</b></div>
+            <div class="cta">Create pitch in Pitch Tracker</div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <h2>This is the application that runs on your Monday data.</h2>
+    <div class="actions" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+      <a class="btn btn-gold" href="index.html">View all products</a>
+      <a class="btn btn-ghost" href="spec.md">Read the product spec</a>
+    </div>
+  </section>
+
+</main>
+
+<footer><div class="wrap"><div class="foot-grid">
+  <div class="foot-brand"><a href="index.html" class="brand"><span class="mark">R</span><span>RIPCO<br><small>ISG Product System</small></span></a><p>A Claude-built application for RIPCO's Investment Sales Group — running on Monday.com server-side.</p></div>
+  <div><h5>Products</h5><a href="index.html#apps">Apps</a><a href="index.html#agents">Agents</a><a href="index.html#data">Data</a><a href="index.html#platform">Platform</a></div>
+  <div><h5>Apps</h5><a href="pipeline.html">Pipeline</a><a href="crm.html">CRM</a><a href="leads.html">Leads</a><a href="screens.html#canvassing">Canvassing</a><a href="status-report.html">Status Reports</a></div>
+  <div><h5>More</h5><a href="om-extractor.html">OM Extractor</a><a href="loi-comparison.html">LOI Comparison</a><a href="screens.html">App screens</a><a href="spec.md">Product spec</a></div>
+</div><div class="foot-base"><span>© 2026 RIPCO Real Estate · Investment Sales Group. Internal product system.</span><span>Claude-built · Monday.com server-side</span></div></div></footer>
+</body>
+</html>
