@@ -1,41 +1,44 @@
 {
-  "name": "isg-crm-prototype",
+  "name": "isg-done-deal-app",
   "version": "0.1.0",
   "private": true,
+  "description": "ISG Done Deal Commission Wizard — monday.com Item View (ISG Listings board)",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "build:client": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 8311",
+    "start": "node server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "mapps:login": "mapps init",
+    "mapps:tunnel": "mapps tunnel:create --port 8311",
+    "mapps:push": "npm run build:client && mapps code:push -d ."
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1",
-    "@tanstack/react-query": "^5.59.0",
-    "@tanstack/react-table": "^8.20.5",
-    "@dnd-kit/core": "^6.1.0",
-    "@dnd-kit/sortable": "^8.0.0",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1",
-    "docx": "^9.0.2",
-    "lucide-react": "^0.453.0",
-    "maplibre-gl": "^4.7.1",
-    "next": "14.2.15",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "tailwind-merge": "^2.5.4",
-    "zod": "^3.23.8",
-    "zustand": "^5.0.0"
+    "@tabler/icons-react": "^3.44.0",
+    "compression": "1.7.4",
+    "express": "4.21.0",
+    "monday-sdk-js": "0.5.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
-    "@types/node": "^22.7.5",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.15",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.13",
-    "typescript": "^5.6.3"
+    "@mondaycom/apps-cli": "latest",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.0",
+    "@vitejs/plugin-react": "4.3.2",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.47",
+    "tailwindcss": "3.4.13",
+    "typescript": "5.6.2",
+    "vite": "5.4.9",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=18.17.0"
   }
 }

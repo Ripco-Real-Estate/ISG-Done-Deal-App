@@ -1,4 +1,4 @@
-## ISG Done Deal Commission Wizard — Full Rebuild Specification - IMPORTANT   
+## ISG Done Deal Commission Wizard — Full Rebuild Specification - IMPORTANT  
 ## 1. Application Overview  
 **Name:** ISG Done Deal Commission Wizard  
 **Type:** monday.com Item View (installed on the ISG Listings board)  

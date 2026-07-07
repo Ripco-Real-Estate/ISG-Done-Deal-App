@@ -1,22 +1,37 @@
-# ISG CRM Prototype
+# ISG Done Deal Commission Wizard
 
-A Lev-style application for RIPCO's **Investment Sales Group** — purpose-built CRM/Pipeline/Leads screens plus an embedded **Claude chat/agent**, built on top of the Monday.com "10. ISG CRM" workspace (server-side). This repo is a **functional prototype** running on mock data behind a swappable data provider.
+A monday.com **Item View** for the **ISG Listings** board. When a listing hits the
+"5. Closing Review" stage, brokers run a 7-step wizard to finalize the deal — documents,
+metrics, parties, deductions, and commission splits — which then writes the finalized record
+into three Finance-workspace boards (Done Deals, its Subitems, and A/R Schedules).
+
+Built as a real coded monday app: **Vite + React 18 + TypeScript + Tailwind + monday-sdk-js**,
+hosted on monday-code.
 
 ## Quick start
+
 ```bash
 npm install
-cp .env.example .env.local   # add ANTHROPIC_API_KEY
-npm run dev                  # http://localhost:3000
+npm run dev          # local dev at http://localhost:8311
+npm run typecheck    # TypeScript
+npm test             # Vitest (commission math + validation)
+npm run build        # production build to dist/
 ```
 
-## Documentation
-- `docs/isg-crm-features-build-brief.md` — **build plan**: features, IA, chat/agent spec, milestones.
-- `docs/isg-crm-spec.md` — **board schema**: the 8 Monday boards, real column IDs, relationships.
-- `docs/reference-microsite/` — visual reference (open `screens.html`, `index.html`).
-- `CLAUDE.md` — instructions for Claude Code (architecture rules, conventions, where things go).
+## Deploy (monday-code)
 
-## Architecture (one line)
-Claude-built UI → `DataProvider` (mock now, Monday later) → seed data; chat via `@anthropic-ai/sdk` in `app/api/chat` with gated write tools.
+```bash
+npm run mapps:login  # one-time auth
+npm run mapps:tunnel # test live inside monday
+npm run mapps:push   # build + push (requires a registered app — see docs/QUESTIONS.md Q-DEPLOY)
+```
 
-## Status
-Scaffold only. Build proceeds in milestones M1–M5 (see brief §6 / `CLAUDE.md`).
+## Docs
+
+- `docs/superpowers/specs/2026-07-06-done-deal-wizard-design.md` — design spec
+- `docs/COLUMN-MAP.md` — **verified** column IDs (source of truth; corrects the original spec)
+- `docs/QUESTIONS.md` — open questions for Adrian
+- `ISG Done Deal Commission Wizard — Full Rebuild Specification.md` — original source spec
+
+> **Two hard rules:** the live board schema wins over the spec, and the app never changes
+> board structure — it writes item values only.

@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* RIPCO UI globals — from RIPCO-UI.md §17.9 (v2.0). App-specific additions are
+   marked; everything else stays in sync with the root doc. */
+
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f6f7fb;
+  --bg-tertiary: #fafbfc;
+  --text-primary: #323338;
+  --text-secondary: #676879;
+  --text-faint: #9b9fb0;
+  --border-default: #e6e9ef;
+  --border-strong: #c4c4c4;
+  --accent-primary: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #eff6ff;
+  --accent-focus: rgba(37, 99, 235, 0.2);
+  --status-success: #00c875;
+  --status-warning: #fdab3d;
+  --status-danger: #df2f4a;
+  --status-purple: #9d50dd;
+  --status-teal: #00797c;
+  --status-navy: #041e42;
+  --radius-card: 12px;
+  --radius-button: 6px;
+  --radius-pill: 9999px;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    -webkit-font-smoothing: antialiased;
+    font-size: 13px;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+}
+
+@layer components {
+  .field-label {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+  }
+  .form-input {
+    @apply w-full border bg-white px-md py-sm text-ink placeholder:text-muted/70 outline-none transition;
+    border-color: var(--border-strong);
+    border-radius: var(--radius-button);
+    transition-property: border-color, box-shadow, background;
+  }
+  .form-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--accent-focus);
+  }
+  .form-textarea {
+    @apply form-input min-h-[96px] resize-y;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* App-specific: styled native <select> chevron so selects match .form-input. */
+select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23676879' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  padding-right: 2rem;
+}
+html.dark select.form-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238d93b5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+/* App-specific: success-screen confirmation pop (§6 — motion confirms an action). */
+@keyframes ddw-pop {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.ddw-pop { animation: ddw-pop 200ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .ddw-pop { animation: none; }
+}
+
+/* Dark mode is a .dark class on <html> (NOT the OS media query) so it toggles in-app. */
+html.dark {
+  --bg-primary: #2e3158;
+  --bg-secondary: #1c1f3b;
+  --bg-tertiary: #262a4a;
+  --text-primary: #d5d8e8;
+  --text-secondary: #8d93b5;
+  --text-faint: #6b7099;
+  --border-default: #373b60;
+  --border-strong: #4a4e78;
+  --accent-light: rgba(37, 99, 235, 0.2);
+}
+html.dark body {
+  background: #1c1f3b;
+  color: #d5d8e8;
+}
+html.dark .bg-white {
+  background: #2e3158 !important;
+}
+html.dark .bg-bg-subtle {
+  background: #262a4a !important;
+}
+html.dark .bg-bg {
+  background: #1c1f3b !important;
+}
+html.dark .text-ink {
+  color: #d5d8e8 !important;
+}
+html.dark .text-muted {
+  color: #8d93b5 !important;
+}
+html.dark .text-faint {
+  color: #6b7099 !important;
+}
+html.dark .border-border {
+  border-color: #373b60 !important;
+}
+html.dark .border-border-strong {
+  border-color: #4a4e78 !important;
+}
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background: #262a4a !important;
+  color: #d5d8e8 !important;
+  border-color: #4a4e78 !important;
+}
