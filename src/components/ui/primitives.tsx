@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { cn } from '@/lib/utils/cn';
 
 /**
@@ -75,6 +75,63 @@ export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...props} className={cn('form-input h-8 text-[13px]', props.className)} />;
+}
+
+// ── Formatted numeric inputs (currency / thousands) ─────────────────────────
+// Stores a number|null; shows a formatted value when idle and the raw digits
+// while editing (an internal text buffer avoids caret jumps and lets you type
+// decimals). onChange fires the parsed number on every keystroke.
+type NumericInputProps = {
+  value: number | null;
+  onChange: (n: number | null) => void;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type'>;
+
+function parseNumeric(s: string): number | null {
+  const cleaned = s.replace(/[^0-9.-]/g, '');
+  if (cleaned === '' || cleaned === '-' || cleaned === '.') return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
+function FormattedNumberInput({
+  value,
+  onChange,
+  format,
+  className,
+  ...rest
+}: NumericInputProps & { format: (n: number) => string }) {
+  // `buffer` holds exactly what the user types while focused; null = idle (show formatted).
+  const [buffer, setBuffer] = useState<string | null>(null);
+  const display = buffer !== null ? buffer : value === null ? '' : format(value);
+  return (
+    <input
+      {...rest}
+      type="text"
+      inputMode="decimal"
+      className={cn('form-input h-8 text-[13px] num', className)}
+      value={display}
+      onFocus={() => setBuffer(value === null ? '' : String(value))}
+      onBlur={() => setBuffer(null)}
+      onChange={(e) => {
+        setBuffer(e.target.value);
+        onChange(parseNumeric(e.target.value));
+      }}
+    />
+  );
+}
+
+const fmtCurrency = (n: number) =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const fmtThousands = (n: number) => n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+/** USD input ($ + thousands when idle), e.g. $1,250,000. */
+export function CurrencyInput(props: NumericInputProps) {
+  return <FormattedNumberInput {...props} format={fmtCurrency} />;
+}
+
+/** Plain number input with thousands separators when idle, e.g. 24,000. */
+export function NumberInput(props: NumericInputProps) {
+  return <FormattedNumberInput {...props} format={fmtThousands} />;
 }
 
 // ── Yes/No segmented toggle — accent marks the selected segment (§0.3) ──────

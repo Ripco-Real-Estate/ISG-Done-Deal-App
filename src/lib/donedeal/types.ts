@@ -27,6 +27,20 @@ export interface PaymentRow {
   dueDate: string;
 }
 
+/**
+ * The lead chosen as the winning buyer (ISG Leads Tracker). Kept self-contained
+ * (not just the id) so drafts, the snapshot, and the submit write-back all work
+ * without re-fetching the lead.
+ */
+export interface WinningLead {
+  /** Leads Tracker item id. */
+  id: string;
+  name: string;
+  offerPrice: number | null;
+  /** YYYY-MM-DD ('' when the lead has no offer date). */
+  offerDate: string;
+}
+
 /** One seller or buyer. Index 0 in its array is the primary party. */
 export interface PartyEntry {
   /** Stable local key for React. */
@@ -98,6 +112,8 @@ export interface FormData {
     sellers: PartyEntry[];
     /** Index 0 = primary buyer. */
     buyers: PartyEntry[];
+    /** Optional: the Leads Tracker lead selected as the buyer (null = none). */
+    winningLead: WinningLead | null;
   };
   billing: BillingContact;
   deductions: {
@@ -156,6 +172,7 @@ export const INITIAL_FORM_DATA: FormData = {
   dealParties: {
     sellers: [makeParty('seller-1')],
     buyers: [makeParty('buyer-1')],
+    winningLead: null,
   },
   billing: {
     sameAsSeller: true,

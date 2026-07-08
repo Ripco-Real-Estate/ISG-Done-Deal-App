@@ -1,4 +1,4 @@
-import { Section, Field, TextInput, Select, YesNoToggle } from '@/components/ui/primitives';
+import { Section, Field, TextInput, Select, YesNoToggle, NumberInput } from '@/components/ui/primitives';
 import { PROPERTY_TYPES } from '@/lib/donedeal/columns';
 import { computePPSF, computeTotalUnits, num } from '@/lib/donedeal/compute';
 import { money } from '@/lib/utils/cn';
@@ -30,11 +30,7 @@ export function DealMetrics({ form, update }: StepProps) {
         </Field>
 
         <Field label="Total SF" hint="Pre-filled from the property record; editable.">
-          <TextInput
-            type="number"
-            value={m.totalSf ?? ''}
-            onChange={(e) => update((d) => (d.metrics.totalSf = parseNum(e.target.value)))}
-          />
+          <NumberInput value={m.totalSf} onChange={(n) => update((d) => (d.metrics.totalSf = n))} />
         </Field>
 
         <Field label="PPSF" hint="Final sales price ÷ total SF.">

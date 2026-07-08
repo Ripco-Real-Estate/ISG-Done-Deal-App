@@ -1,5 +1,6 @@
 import { api } from '../monday/sdk';
-import { BOARDS, ISG, DD, SUB, AR, DD_BILLING, AR_BILLING, LABELS } from './columns';
+import { BOARDS, ISG, DD, SUB, AR, DD_BILLING, AR_BILLING, LABELS, LEAD } from './columns';
+import { buildContextSnapshot } from './snapshot';
 import type { FormData, Profile } from './types';
 import {
   computeWaterfall,
@@ -34,19 +35,25 @@ export interface SubmitCtx {
 
 export interface SubmitState {
   doneDealId: string | null;
-  /** id of the additional-parties update posted on the Done Deal (null = not posted). */
-  partiesUpdateId: string | null;
+  /** id of the snapshot Update posted on the ISG Listing (null = not posted / failed). */
+  listingUpdateId: string | null;
+  /** id of the snapshot Update posted on the Done Deal (null = not posted / failed). */
+  doneDealUpdateId: string | null;
   subitemIds: string[];
   arItemIds: string[];
+  /** Winning lead marked 'xx. Buyer' on the Leads Tracker (best-effort). */
+  leadClosed: boolean;
   /** Highest step index fully completed (0 = nothing yet, 5 = all done). */
   completedSteps: number;
 }
 
 export const INITIAL_SUBMIT_STATE: SubmitState = {
   doneDealId: null,
-  partiesUpdateId: null,
+  listingUpdateId: null,
+  doneDealUpdateId: null,
   subitemIds: [],
   arItemIds: [],
+  leadClosed: false,
   completedSteps: 0,
 };
 
@@ -60,7 +67,22 @@ const checkbox = (checked: boolean) => ({ checked: checked ? 'true' : 'false' })
 const dateVal = (ymd: string) => ({ date: ymd });
 const email = (addr: string) => ({ email: addr, text: addr });
 const relation = (ids: Array<string | number>) => ({ item_ids: ids.map((i) => Number(i)) });
-const phoneVal = (p: string) => ({ phone: p.replace(/[^\d]/g, ''), countryShortName: 'US' });
+/**
+ * Sanitize a phone field into a single valid US number for monday's phone column.
+ * The source is often a comma/semicolon/slash-joined mirror of MULTIPLE contacts
+ * (e.g. "2035075484, 2305550999") — sending that whole blob makes monday reject the
+ * write. We take the FIRST candidate that resolves to a valid 10-digit US number
+ * (or 11 digits with a leading country "1"), else return undefined so `prune` drops
+ * the key and we simply write no phone rather than an invalid one.
+ */
+export function phoneVal(p: string): { phone: string; countryShortName: 'US' } | undefined {
+  for (const candidate of (p ?? '').split(/[,;/|\n]+/)) {
+    let digits = candidate.replace(/\D/g, '');
+    if (digits.length === 11 && digits.startsWith('1')) digits = digits.slice(1);
+    if (digits.length === 10) return { phone: digits, countryShortName: 'US' };
+  }
+  return undefined;
+}
 
 /** Billing column payload for either board's billing block (prune drops empties). */
 function billingCols(map: typeof DD_BILLING | typeof AR_BILLING, form: FormData): Record<string, unknown> {
@@ -197,26 +219,6 @@ export function buildDoneDeal(
   return { itemName, cols: prune(cols) };
 }
 
-/**
- * Plain-text update body for parties beyond the primaries; null when none.
- * Additional parties never touch the structured Client/TLB columns (they feed
- * automated invoicing) — they ride along as a context update on the Done Deal.
- */
-export function buildPartiesUpdate(form: FormData): string | null {
-  const extraSellers = form.dealParties.sellers.slice(1);
-  const extraBuyers = form.dealParties.buyers.slice(1);
-  if (extraSellers.length === 0 && extraBuyers.length === 0) return null;
-  const line = (p: FormData['dealParties']['sellers'][number], n: number) => {
-    const head = p.company ? `${p.name} — ${p.company}` : p.name;
-    const rest = [p.email, p.phone, p.entity].filter(Boolean).join(' · ');
-    return `  ${n}) ${rest ? `${head} · ${rest}` : head}`;
-  };
-  const lines = ['Additional parties (from Done Deal wizard)'];
-  if (extraSellers.length) lines.push('Sellers:', ...extraSellers.map((p, i) => line(p, i + 2)));
-  if (extraBuyers.length) lines.push('Buyers:', ...extraBuyers.map((p, i) => line(p, i + 2)));
-  return lines.join('\n');
-}
-
 async function postUpdate(itemId: string, body: string): Promise<string> {
   const mutation = `
     mutation PostUpdate($item: ID!, $body: String!) {
@@ -224,6 +226,46 @@ async function postUpdate(itemId: string, body: string): Promise<string> {
     }`;
   const data = await api<{ create_update: { id: string } }>(mutation, { item: itemId, body });
   return data.create_update.id;
+}
+
+/**
+ * Post the snapshot Update, swallowing any failure. The structured column writes are
+ * the system of record; this Update is a convenience snapshot and must NEVER fail the
+ * submit (a failed Update after the Done Deal exists would otherwise strand the user).
+ */
+async function postUpdateSafe(itemId: string, body: string): Promise<string | null> {
+  try {
+    return await postUpdate(itemId, body);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('[submit] snapshot update failed (non-fatal)', e);
+    return null;
+  }
+}
+
+/**
+ * Close the funnel loop: mark the chosen lead 'xx. Buyer' on the ISG Leads Tracker.
+ * Values only (the label exists on the live board) and best-effort — a Leads write
+ * must never block a Finance submit. Losing leads are intentionally untouched
+ * (handled later by board automation once the funnel process is finalized).
+ */
+async function closeWinningLeadSafe(leadId: string): Promise<boolean> {
+  try {
+    const mutation = `
+      mutation CloseLead($board: ID!, $item: ID!, $cols: JSON!) {
+        change_multiple_column_values(board_id: $board, item_id: $item, column_values: $cols) { id }
+      }`;
+    await api(mutation, {
+      board: BOARDS.leadsTracker,
+      item: leadId,
+      cols: JSON.stringify({ [LEAD.status]: statusLabel(LABELS.leadWinner) }),
+    });
+    return true;
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('[submit] winning-lead close failed (non-fatal)', e);
+    return false;
+  }
 }
 
 async function createDoneDeal(ctx: SubmitCtx, form: FormData, wf: Waterfall, now: Date): Promise<string> {
@@ -303,6 +345,7 @@ export function buildArItem(
     [AR.clientName]: primarySeller(form).name,
     [AR.tenantBuyerBorrower]: primaryBuyer(form).name,
     [AR.doneDealRelation]: relation([doneDealId]),
+    [AR.sourceType]: form.dealDetails.sourceType ? dropdownLabels(form.dealDetails.sourceType) : undefined,
   };
   // Optional per-row due date; single payment falls back to the close date.
   const due = row.dueDate || form.dealDetails.actualCloseDate;
@@ -384,21 +427,27 @@ export async function runSubmission(
   clearDraftFn?: () => Promise<void>,
 ): Promise<SubmitResult> {
   const wf = computeWaterfall(form);
+  const snapshot = buildContextSnapshot(form, wf);
   const s: SubmitState = { ...state, subitemIds: [...state.subitemIds], arItemIds: [...state.arItemIds] };
 
   try {
     if (s.completedSteps < 1) {
       onProgress(1, STEP_LABELS[0], 'running');
       await updateListing(ctx, form, wf);
+      // Best-effort snapshot on the listing (never fails the submit).
+      if (!s.listingUpdateId) s.listingUpdateId = await postUpdateSafe(ctx.itemId, snapshot);
       s.completedSteps = 1;
       onProgress(1, STEP_LABELS[0], 'done');
     }
     if (s.completedSteps < 2) {
       onProgress(2, STEP_LABELS[1], 'running');
-      // Resume-safe: held ids mean a retry never re-creates the item or the update.
+      // Resume-safe: held doneDealId means a retry never re-creates the item.
       if (!s.doneDealId) s.doneDealId = await createDoneDeal(ctx, form, wf, now);
-      const partiesBody = buildPartiesUpdate(form);
-      if (partiesBody && !s.partiesUpdateId) s.partiesUpdateId = await postUpdate(s.doneDealId, partiesBody);
+      // Best-effort snapshot on the Done Deal (never fails the submit).
+      if (!s.doneDealUpdateId) s.doneDealUpdateId = await postUpdateSafe(s.doneDealId, snapshot);
+      // Best-effort funnel close: winning lead → 'xx. Buyer'.
+      const lead = form.dealParties.winningLead;
+      if (lead && !s.leadClosed) s.leadClosed = await closeWinningLeadSafe(lead.id);
       s.completedSteps = 2;
       onProgress(2, STEP_LABELS[1], 'done');
     }

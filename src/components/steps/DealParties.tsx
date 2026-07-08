@@ -1,8 +1,10 @@
 import { IconPlus, IconTrash } from '@tabler/icons-react';
-import { Section, Field, TextInput, Button, YesNoToggle } from '@/components/ui/primitives';
+import { Section, Field, TextInput, Select, Button, YesNoToggle } from '@/components/ui/primitives';
 import { ContactLookup } from '@/components/ui/ContactLookup';
 import { resolvedBilling } from '@/lib/donedeal/compute';
 import { makeParty, type FormData, type PartyEntry } from '@/lib/donedeal/types';
+import { money } from '@/lib/utils/cn';
+import type { LeadOption } from '@/lib/donedeal/read';
 import type { StepProps } from './types';
 
 let seq = 0;
@@ -88,11 +90,44 @@ function PartyCard({
   );
 }
 
+/** Option label: "Kent Capital — Kent Cap · $12,500,000 · 2026-06-01 (4.2 Offer Accepted)". */
+function leadLabel(l: LeadOption): string {
+  const parts = [
+    l.company && l.company !== l.name ? `— ${l.company}` : '',
+    l.offerPrice != null ? `· ${money(l.offerPrice)}` : '',
+    l.offerDate ? `· ${l.offerDate}` : '',
+    l.status ? `(${l.status})` : '',
+  ].filter(Boolean);
+  return [l.name, ...parts].join(' ');
+}
+
 /** Step 4 — Deal parties. Primary seller pre-filled from mirrors; more parties addable. */
-export function DealParties({ form, update }: StepProps) {
+export function DealParties({ form, update, leads }: StepProps) {
   const addParty = (side: Side) =>
     update((d) => {
       d.dealParties[side].push(makeParty(nextId(side)));
+    });
+  // Winning-buyer picker: selecting a lead fills the primary buyer card and records
+  // the lead so submit can mark it 'xx. Buyer' on the Leads Tracker (optional flow).
+  const pickWinningLead = (leadId: string) =>
+    update((d) => {
+      const lead = leads.find((l) => l.id === leadId);
+      if (!lead) {
+        d.dealParties.winningLead = null;
+        return;
+      }
+      d.dealParties.winningLead = {
+        id: lead.id,
+        name: lead.name,
+        offerPrice: lead.offerPrice,
+        offerDate: lead.offerDate,
+      };
+      const primary = d.dealParties.buyers[0] ?? makeParty('buyer-1');
+      primary.name = lead.name;
+      primary.company = lead.company;
+      primary.email = lead.email;
+      primary.phone = lead.phone;
+      d.dealParties.buyers[0] = primary;
     });
   return (
     <div className="space-y-4">
@@ -108,6 +143,26 @@ export function DealParties({ form, update }: StepProps) {
       </Section>
 
       <Section title="Buyers" description="Entered by you.">
+        {leads.length > 0 && (
+          <div className="mb-4">
+            <Field
+              label="Winning buyer — from Leads Tracker"
+              hint="Optional. Fills the primary buyer below; on submit the lead is marked 'xx. Buyer'."
+            >
+              <Select
+                value={form.dealParties.winningLead?.id ?? ''}
+                onChange={(e) => pickWinningLead(e.target.value)}
+              >
+                <option value="">Not selected…</option>
+                {leads.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {leadLabel(l)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+        )}
         <div className="space-y-2.5">
           {form.dealParties.buyers.map((p, i) => (
             <PartyCard key={p.id} party={p} side="buyers" index={i} update={update} canRemove={i > 0} />

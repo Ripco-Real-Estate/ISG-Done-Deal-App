@@ -10,11 +10,44 @@
 
 export const BOARDS = {
   isgListings: 9262635626,
+  properties: 9262635619,
   brokerProfiles: 18399686792,
   doneDeals: 18401124547,
   doneDealSubitems: 18401124549,
   arSchedules: 18401124599,
   contacts: 9262635615,
+  leadsTracker: 9263596898,
+} as const;
+
+/**
+ * Board-relation columns traversed to read the seller contacts individually
+ * (Listing → Property → Contacts). Reading the linked contacts one by one avoids
+ * the comma-joined owner mirrors, which mangle multi-owner deals. Verified 2026-07-08.
+ */
+export const REL = {
+  listingToProperty: 'board_relation_mkrdxwqb', // ISG Listings → Properties (9262635619)
+  propertyToContacts: 'board_relation_mkswenwr', // Properties → Contacts (9262635615)
+  listingToLeads: 'board_relation_mkre1cj2', // ISG Listings → ISG Leads Tracker (9263596898)
+} as const;
+
+/**
+ * ISG Leads Tracker (buyer funnel) — read for the winning-buyer picker; the ONLY
+ * write is Status → LABELS.leadWinner on the chosen lead (verified live 2026-07-08).
+ * Mirror columns come from the lead's Associated Contact; the Ai: columns are the
+ * fallback when no contact is linked.
+ */
+export const LEAD = {
+  status: 'status',
+  offerPrice: 'numeric_mkrenrvk',
+  offerDate: 'date4',
+  contactRelation: 'board_relation_mkre9mpp',
+  companyMirror: 'lookup_mkre301k',
+  emailMirror: 'lookup_mm1sajx5',
+  cellPhoneMirror: 'lookup_mm1s8928',
+  aiName: 'text_mm1gdx2y',
+  aiCompany: 'text_mm1g34em',
+  aiEmail: 'email_mm1g43r4',
+  aiPhone: 'phone_mm1gmzx9',
 } as const;
 
 /** Deal Stage labels on ISG Listings (status `deal_stage`). */
@@ -152,6 +185,7 @@ export const AR = {
   tenantBuyerBorrower: 'text_mm1h8f5s',
   doneDealRelation: 'board_relation_mm0vabds',
   dueDate: 'date_mkzwfznd',
+  sourceType: 'dropdown_mm15b1ek',
 } as const;
 
 /** Contacts board (ISG CRM) — read-only lookup source (verified live 2026-07-06). */
@@ -203,6 +237,8 @@ export const LABELS = {
   splitHouseDeal: 'House Deal',
   splitTeamSplit: 'Team Split',
   financeNewSubmission: 'New Submission',
+  /** Leads Tracker Status label marking the winning buyer (exists on the live board). */
+  leadWinner: 'xx. Buyer',
   yes: 'Yes',
   no: 'No',
 } as const;

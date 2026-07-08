@@ -1,10 +1,10 @@
-import { Section, Field, TextInput, TextArea, Select } from '@/components/ui/primitives';
+import { Section, Field, TextInput, TextArea, Select, CurrencyInput } from '@/components/ui/primitives';
 import { TRANSACTION_TYPES, SOURCE_TYPES } from '@/lib/donedeal/columns';
 import type { StepProps } from './types';
 
 const parseNum = (v: string): number | null => (v === '' ? null : Number.isFinite(+v) ? +v : null);
 
-/** Step 3 — Deal details (source spec §8.3). */
+/** Step 3 — Deal details (source spec §8.3). Field order per RIPCO request 2026-07-08. */
 export function DealDetails({ form, update }: StepProps) {
   const d = form.dealDetails;
   return (
@@ -39,21 +39,17 @@ export function DealDetails({ form, update }: StepProps) {
           </Select>
         </Field>
 
-        <Field label="Final sales price ($)" required>
-          <TextInput
-            type="number"
-            className="num"
-            value={d.finalSalesPrice ?? ''}
-            onChange={(e) => update((s) => (s.dealDetails.finalSalesPrice = parseNum(e.target.value)))}
+        <Field label="Final sales price" required>
+          <CurrencyInput
+            value={d.finalSalesPrice}
+            onChange={(n) => update((s) => (s.dealDetails.finalSalesPrice = n))}
           />
         </Field>
 
-        <Field label="Scheduled commission ($)" required>
-          <TextInput
-            type="number"
-            className="num"
-            value={d.scheduledCommission ?? ''}
-            onChange={(e) => update((s) => (s.dealDetails.scheduledCommission = parseNum(e.target.value)))}
+        <Field label="Contract price">
+          <CurrencyInput
+            value={d.contractPrice}
+            onChange={(n) => update((s) => (s.dealDetails.contractPrice = n))}
           />
         </Field>
 
@@ -66,12 +62,10 @@ export function DealDetails({ form, update }: StepProps) {
           />
         </Field>
 
-        <Field label="Contract price ($)">
-          <TextInput
-            type="number"
-            className="num"
-            value={d.contractPrice ?? ''}
-            onChange={(e) => update((s) => (s.dealDetails.contractPrice = parseNum(e.target.value)))}
+        <Field label="Scheduled commission" required>
+          <CurrencyInput
+            value={d.scheduledCommission}
+            onChange={(n) => update((s) => (s.dealDetails.scheduledCommission = n))}
           />
         </Field>
 

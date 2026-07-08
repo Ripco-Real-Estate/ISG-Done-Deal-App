@@ -23,6 +23,7 @@ export function normalizeDraft(parsed: unknown): FormData {
     out.dealParties = {
       sellers: dp.sellers.map((s: any, i: number) => ({ ...makeParty(s?.id ?? `seller-${i + 1}`), ...s })),
       buyers: (dp.buyers ?? []).map((b: any, i: number) => ({ ...makeParty(b?.id ?? `buyer-${i + 1}`), ...b })),
+      winningLead: dp.winningLead ?? null,
     };
     if (out.dealParties.sellers.length === 0) out.dealParties.sellers = [makeParty('seller-1')];
     if (out.dealParties.buyers.length === 0) out.dealParties.buyers = [makeParty('buyer-1')];
@@ -30,6 +31,7 @@ export function normalizeDraft(parsed: unknown): FormData {
     out.dealParties = {
       sellers: [{ ...makeParty('seller-1'), ...(dp.seller ?? {}) }],
       buyers: [{ ...makeParty('buyer-1'), ...(dp.buyer ?? {}) }],
+      winningLead: dp.winningLead ?? null,
     };
   } else {
     out.dealParties = base.dealParties;

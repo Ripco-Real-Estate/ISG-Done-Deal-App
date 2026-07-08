@@ -237,3 +237,31 @@ the ContactLookup fast-fill. This app never writes to this board.
 Query: `boards(ids:[18399686792]){ items_page(limit:500){ items { id name column_values(ids:["color_mm12rset"]){ id text } } } }`
 
 House-deal principals to match by name: **Todd Cooper, Mark Kaplan, Peter Ripka**.
+
+---
+
+## Addendum — verified live 2026-07-08 (wizard v2)
+
+### Relation traversal (read-only)
+| Purpose | Board | Column ID |
+|---|---|---|
+| Listing → Property Record | ISG Listings | `board_relation_mkrdxwqb` |
+| Property → Contact Name | Properties (9262635619) | `board_relation_mkswenwr` |
+| Listing → ISG Leads Tracker | ISG Listings | `board_relation_mkre1cj2` |
+
+### A/R Schedules (18401124599) — added
+| Column | ID | Notes |
+|---|---|---|
+| Source Type | `dropdown_mm15b1ek` | Same 7 labels as ISG/Done Deals. Written on every A/R item. |
+
+### ISG Leads Tracker (9263596898) — read + ONE write
+| Column | ID | Notes |
+|---|---|---|
+| Status | `status` | ONLY write: label `xx. Buyer` on the winning lead (label exists — never create labels) |
+| Offer Price | `numeric_mkrenrvk` | read |
+| Offer Date | `date4` | read |
+| Associated Contact | `board_relation_mkre9mpp` | read |
+| Associated Company (mirror) | `lookup_mkre301k` | read |
+| Email (mirror) | `lookup_mm1sajx5` | read |
+| Cell Phone (mirror) | `lookup_mm1s8928` | read |
+| Ai: Contact Name / Company / Email / Phone | `text_mm1gdx2y` / `text_mm1g34em` / `email_mm1g43r4` / `phone_mm1gmzx9` | read fallbacks |

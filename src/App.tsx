@@ -16,8 +16,11 @@ import {
   readListing,
   readActiveProfiles,
   prefillFromItem,
+  readSellerContacts,
+  readListingLeads,
   getContext,
   findDoneDealForListing,
+  type LeadOption,
 } from '@/lib/donedeal/read';
 import { saveDraft, loadDraft, clearDraft } from '@/lib/donedeal/storage';
 import { STEP_VALIDATORS } from '@/lib/donedeal/compute';
@@ -82,6 +85,7 @@ export default function App() {
   const [itemId, setItemId] = useState<string>('');
   const [form, setForm] = useState<FormData>(INITIAL_FORM_DATA);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [leads, setLeads] = useState<LeadOption[]>([]);
   const [userId, setUserId] = useState<number | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
@@ -145,14 +149,25 @@ export default function App() {
         return;
       }
 
-      // Draft wins; else prefill from the listing.
+      // Draft wins; else prefill from the listing. Sellers are read as separate
+      // clean rows from the linked contacts (multi-owner deals); fall back to the
+      // mirror-based single seller when there's no property/contacts link.
       const draft = await loadDraft(id);
-      setForm(draft ?? prefillFromItem(listing));
-      setResumedDraft(draft !== null);
+      if (draft) {
+        setForm(draft);
+        setResumedDraft(true);
+      } else {
+        const base = prefillFromItem(listing);
+        const sellers = await readSellerContacts(id);
+        if (sellers.length) base.dealParties.sellers = sellers;
+        setForm(base);
+        setResumedDraft(false);
+      }
       setPhase('wizard');
 
-      // Profiles load in the background — never blocks the UI.
+      // Profiles + linked leads load in the background — never block the UI.
       void readActiveProfiles().then(setProfiles);
+      void readListingLeads(id).then(setLeads);
     })().catch((e) => {
       setErrorMsg(e instanceof Error ? e.message : "Couldn't load the listing.");
       setPhase('error');
@@ -355,7 +370,7 @@ export default function App() {
     );
   if (phase === 'success') return <SuccessScreen doneDealId={doneDealId} />;
 
-  const stepProps: StepProps = { form, update, itemId, profiles, onUploadingChange: setIsUploadingFile };
+  const stepProps: StepProps = { form, update, itemId, profiles, leads, onUploadingChange: setIsUploadingFile };
 
   return (
     <div className="flex h-full min-h-0 flex-col">

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildListingUpdate, buildDoneDeal, buildSubitem, buildArItem, buildPartiesUpdate, prune } from './submit';
+import { buildListingUpdate, buildDoneDeal, buildSubitem, buildArItem, prune, phoneVal } from './submit';
 import type { SubmitCtx } from './submit';
 import { computeWaterfall } from './compute';
 import { INITIAL_FORM_DATA, type FormData } from './types';
@@ -30,6 +30,24 @@ const ctx: SubmitCtx = { itemId: '123', userId: 77, profiles: [{ id: '900', name
 describe('prune', () => {
   it('drops undefined/null/empty but keeps 0 and false', () => {
     expect(prune({ a: 0, b: false, c: '', d: null, e: undefined, f: 'x' })).toEqual({ a: 0, b: false, f: 'x' });
+  });
+});
+
+describe('phoneVal', () => {
+  it('accepts a single clean number (any punctuation)', () => {
+    expect(phoneVal('(212) 555-0000')).toEqual({ phone: '2125550000', countryShortName: 'US' });
+    expect(phoneVal('718.555.0142')).toEqual({ phone: '7185550142', countryShortName: 'US' });
+  });
+  it('strips a leading country 1 from an 11-digit number', () => {
+    expect(phoneVal('1-203-507-5484')).toEqual({ phone: '2035075484', countryShortName: 'US' });
+  });
+  it('takes the FIRST valid number from a multi-contact mirror string', () => {
+    expect(phoneVal('2035075484, 2305550999')).toEqual({ phone: '2035075484', countryShortName: 'US' });
+  });
+  it('returns undefined when no valid number is present (so prune drops it)', () => {
+    expect(phoneVal('')).toBeUndefined();
+    expect(phoneVal('n/a')).toBeUndefined();
+    expect(phoneVal('20350754842305550999')).toBeUndefined(); // 20 concatenated digits, no separator
   });
 });
 
@@ -140,29 +158,6 @@ describe('billing writes', () => {
   });
 });
 
-describe('buildPartiesUpdate', () => {
-  it('returns null when there are no additional parties', () => {
-    expect(buildPartiesUpdate(fullDeal())).toBeNull();
-  });
-
-  it('formats additional sellers and buyers with numbering from 2', () => {
-    const f = fullDeal();
-    f.dealParties.sellers.push({
-      id: 's2', name: '250 BK Partners LLC', company: 'BK Cap',
-      email: 'jane@bk.com', phone: '(917) 555-0102', entity: '250 BK LLC',
-    });
-    f.dealParties.buyers.push({
-      id: 'b2', name: 'Acme Capital', company: '', email: 'bob@acme.com', phone: '', entity: '',
-    });
-    const body = buildPartiesUpdate(f)!;
-    expect(body).toContain('Additional parties (from Done Deal wizard)');
-    expect(body).toContain('Sellers:');
-    expect(body).toContain('2) 250 BK Partners LLC — BK Cap · jane@bk.com · (917) 555-0102 · 250 BK LLC');
-    expect(body).toContain('Buyers:');
-    expect(body).toContain('2) Acme Capital · bob@acme.com');
-  });
-});
-
 describe('buildArItem', () => {
   it('numbers the payment, links the done deal, and names the row', () => {
     const f = fullDeal();
@@ -178,6 +173,15 @@ describe('buildArItem', () => {
     expect(cols[AR.dueDate]).toEqual({ date: '2026-08-15' });
     expect(cols[AR.doneDealRelation]).toEqual({ item_ids: [555] });
     expect(AR.doneDealRelation).toBe('board_relation_mm0vabds'); // corrected id
+  });
+
+  it('writes Source Type as a dropdown label, pruned when empty', () => {
+    const f = fullDeal();
+    expect(buildArItem(f, 0, 'dd-1').cols[AR.sourceType]).toEqual({ labels: ['iSales-Seller Rep'] });
+    expect(AR.sourceType).toBe('dropdown_mm15b1ek');
+    const noSource = structuredClone(f);
+    noSource.dealDetails.sourceType = '';
+    expect(buildArItem(noSource, 0, 'dd-1').cols[AR.sourceType]).toBeUndefined();
   });
 
   it('writes Due Date with Actual Close Date fallback and derives the single-payment amount', () => {

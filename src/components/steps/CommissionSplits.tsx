@@ -1,5 +1,5 @@
 import { IconPlus, IconTrash, IconCheck, IconAlertTriangle } from '@tabler/icons-react';
-import { Section, Field, TextInput, Select, YesNoToggle, Button, Pill } from '@/components/ui/primitives';
+import { Section, Field, TextInput, Select, YesNoToggle, Button, Pill, CurrencyInput } from '@/components/ui/primitives';
 import { HOUSE_DEAL_PRINCIPALS, HOUSE_DEAL_SPLIT } from '@/lib/donedeal/columns';
 import {
   brokerSplitTotal,
@@ -31,7 +31,11 @@ function principalRow(name: string, profiles: Profile[]): BrokerEntry {
 /** Step 6 — Commission & splits + A/R payment schedule (source spec §8.6). */
 export function CommissionSplits({ form, update, profiles }: StepProps) {
   const c = form.commission;
-  const activeProfiles = profiles.filter((p) => p.active);
+  // Broker dropdown always reflects the Broker Profiles board: prefer profiles
+  // marked Active, but when NONE are (status not yet maintained), show them all
+  // rather than silently falling back to free-text entry.
+  const markedActive = profiles.filter((p) => p.active);
+  const activeProfiles = markedActive.length > 0 ? markedActive : profiles;
   const splitTotal = brokerSplitTotal(form);
   const splitsOk = splitsBalance(form);
   const payTotal = paymentTotal(form);
@@ -39,21 +43,28 @@ export function CommissionSplits({ form, update, profiles }: StepProps) {
   const scheduled = num(form.dealDetails.scheduledCommission);
 
   // ── House deal ────────────────────────────────────────────────────────────
+  // Yes → insert one locked Principal row (type + split locked); the principal is
+  // then chosen from that row's dropdown. No → remove it.
   function setHouseDeal(v: 'Yes' | 'No') {
     update((d) => {
       d.commission.isHouseDeal = v;
       d.commission.brokers = d.commission.brokers.filter((b) => !b.isHouseDealPrincipal);
-      if (v === 'No') d.commission.houseDealPrincipal = '';
-      else if (d.commission.houseDealPrincipal) {
+      if (v === 'No') {
+        d.commission.houseDealPrincipal = '';
+      } else {
         d.commission.brokers.unshift(principalRow(d.commission.houseDealPrincipal, profiles));
       }
     });
   }
+  // Choosing the principal in the locked row: update it in place (keep its position).
   function setPrincipal(name: string) {
     update((d) => {
       d.commission.houseDealPrincipal = name;
-      d.commission.brokers = d.commission.brokers.filter((b) => !b.isHouseDealPrincipal);
-      if (name) d.commission.brokers.unshift(principalRow(name, profiles));
+      const row = d.commission.brokers.find((b) => b.isHouseDealPrincipal);
+      if (row) {
+        row.name = name;
+        row.profileId = name ? profiles.find((p) => p.name.toLowerCase() === name.toLowerCase())?.id ?? '' : '';
+      }
     });
   }
 
@@ -114,24 +125,6 @@ export function CommissionSplits({ form, update, profiles }: StepProps) {
         <Field label="Is this a house deal?">
           <YesNoToggle value={c.isHouseDeal} onChange={setHouseDeal} />
         </Field>
-        {c.isHouseDeal === 'Yes' && (
-          <div className="mt-4">
-            <Field
-              label="House deal principal"
-              required
-              hint={`Locked at ${HOUSE_DEAL_SPLIT}%. Brokers fill the remaining ${100 - HOUSE_DEAL_SPLIT}%.`}
-            >
-              <Select value={c.houseDealPrincipal} onChange={(e) => setPrincipal(e.target.value)}>
-                <option value="">Select principal…</option>
-                {HOUSE_DEAL_PRINCIPALS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          </div>
-        )}
       </Section>
 
       <Section title="Commission splits" description="Each broker's participation and split percentage.">
@@ -146,9 +139,16 @@ export function CommissionSplits({ form, update, profiles }: StepProps) {
               key={b.id}
               className="grid grid-cols-1 items-end gap-2 rounded-button border border-border p-[10px] sm:grid-cols-[1fr_150px_90px_32px]"
             >
-              <Field label={b.isHouseDealPrincipal ? 'Principal (locked)' : 'Broker'}>
+              <Field label={b.isHouseDealPrincipal ? 'Principal' : 'Broker'}>
                 {b.isHouseDealPrincipal ? (
-                  <TextInput value={b.name} readOnly disabled />
+                  <Select value={c.houseDealPrincipal} onChange={(e) => setPrincipal(e.target.value)}>
+                    <option value="">Select principal…</option>
+                    {HOUSE_DEAL_PRINCIPALS.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </Select>
                 ) : activeProfiles.length > 0 ? (
                   <select
                     value={b.profileId}
@@ -231,13 +231,12 @@ export function CommissionSplits({ form, update, profiles }: StepProps) {
           {effectivePayments(form).map((p, i) => (
             <div key={p.id} className="flex items-center gap-3">
               <Pill tone="blue">Payment {i + 1}</Pill>
-              <TextInput
-                type="number"
-                className="num max-w-[200px]"
+              <CurrencyInput
+                className="max-w-[200px]"
                 aria-label={`Payment ${i + 1} amount`}
-                value={p.amount || ''}
+                value={p.amount || null}
                 disabled={!c.multiplePayments}
-                onChange={(e) => updatePayment(p.id, e.target.value === '' ? 0 : +e.target.value)}
+                onChange={(n) => updatePayment(p.id, n ?? 0)}
               />
               <TextInput
                 type="date"

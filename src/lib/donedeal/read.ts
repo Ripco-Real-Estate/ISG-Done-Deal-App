@@ -1,6 +1,6 @@
 import { api, monday } from '../monday/sdk';
-import { BOARDS, ISG, DD, PROFILE } from './columns';
-import type { FormData, ListingItem, Profile, UploadedFile } from './types';
+import { BOARDS, ISG, DD, PROFILE, REL, CONTACT, LEAD } from './columns';
+import type { FormData, ListingItem, PartyEntry, Profile, UploadedFile } from './types';
 import { INITIAL_FORM_DATA } from './types';
 
 /** All ISG columns the wizard reads, deduped. */
@@ -267,6 +267,148 @@ export async function findDoneDealForListing(listingId: string): Promise<string 
     // eslint-disable-next-line no-console
     console.warn('[read] findDoneDealForListing failed — link hidden', e);
     return null;
+  }
+}
+
+/** A linked Contact item, trimmed to the fields the wizard needs. */
+interface RawContactItem {
+  id: string;
+  name: string;
+  column_values: Array<{ id: string; text: string | null }>;
+}
+
+/**
+ * Map linked Contact items to seller PartyEntry rows (index 0 = primary). Pure and
+ * testable. One clean row per contact — the fix for multi-owner deals that Monday
+ * otherwise comma-joins into a single mangled row. Phone prefers office, then cell.
+ */
+export function mapContactsToParties(contacts: RawContactItem[]): PartyEntry[] {
+  return contacts.map((c, i) => {
+    const text = (colId: string) => (c.column_values.find((cv) => cv.id === colId)?.text ?? '').trim();
+    return {
+      id: `seller-${i + 1}`,
+      name: (c.name ?? '').trim(),
+      company: text(CONTACT.companyText),
+      email: text(CONTACT.email),
+      phone: text(CONTACT.officePhone) || text(CONTACT.cellPhone),
+      entity: '',
+    };
+  });
+}
+
+/**
+ * Read the listing's owner contacts as separate seller rows via
+ * Listing → Property Record → Contact Name. Returns [] on any missing link or error
+ * so the caller falls back to the mirror-based single-seller prefill. Never throws.
+ */
+export async function readSellerContacts(listingId: string): Promise<PartyEntry[]> {
+  const linkedIds = (data: {
+    items?: Array<{ column_values: Array<{ linked_item_ids?: string[] | null }> }>;
+  }): string[] => data.items?.[0]?.column_values?.[0]?.linked_item_ids ?? [];
+
+  try {
+    // 1. Listing → Property Record
+    const q1 = `query ($id: [ID!]) {
+      items(ids: $id) { column_values(ids: ["${REL.listingToProperty}"]) {
+        ... on BoardRelationValue { linked_item_ids } } } }`;
+    const propertyId = linkedIds(await api(q1, { id: [listingId] }))[0];
+    if (!propertyId) return [];
+
+    // 2. Property → Contact Name
+    const q2 = `query ($id: [ID!]) {
+      items(ids: $id) { column_values(ids: ["${REL.propertyToContacts}"]) {
+        ... on BoardRelationValue { linked_item_ids } } } }`;
+    const contactIds = linkedIds(await api(q2, { id: [propertyId] }));
+    if (contactIds.length === 0) return [];
+
+    // 3. Each contact's fields
+    const q3 = `query ($ids: [ID!]) {
+      items(ids: $ids) { id name
+        column_values(ids: ["${CONTACT.companyText}", "${CONTACT.email}", "${CONTACT.officePhone}", "${CONTACT.cellPhone}"]) { id text } } }`;
+    const d3 = await api<{ items: RawContactItem[] }>(q3, { ids: contactIds });
+
+    // Preserve the linked order (items(ids:) does not guarantee it).
+    const byId = new Map((d3.items ?? []).map((it) => [it.id, it]));
+    const ordered = contactIds.map((id) => byId.get(String(id))).filter((x): x is RawContactItem => !!x);
+    return mapContactsToParties(ordered);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('[read] readSellerContacts failed — mirror prefill fallback', e);
+    return [];
+  }
+}
+
+/** A lead from the ISG Leads Tracker, shaped for the winning-buyer picker. */
+export interface LeadOption {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  offerPrice: number | null;
+  /** YYYY-MM-DD ('' when none). */
+  offerDate: string;
+  status: string;
+}
+
+interface RawLeadItem {
+  id: string;
+  name: string;
+  column_values: Array<{ id: string; text: string | null; display_value?: string | null }>;
+}
+
+/**
+ * Map Leads Tracker items to LeadOption[s]. Pure and testable. Contact mirrors win;
+ * the Ai: columns fill gaps when no contact is linked. Leads with offers sort first
+ * (highest offer on top) since the winner is almost always among them.
+ */
+export function mapLeadItems(items: RawLeadItem[]): LeadOption[] {
+  const mapped = items.map((it) => {
+    const val = (colId: string) => {
+      const cv = it.column_values.find((c) => c.id === colId);
+      return (cv?.display_value ?? cv?.text ?? '').trim();
+    };
+    const priceRaw = val(LEAD.offerPrice);
+    const price = priceRaw ? parseFloat(priceRaw.replace(/[$,\s]/g, '')) : NaN;
+    return {
+      id: it.id,
+      name: (it.name ?? '').trim() || val(LEAD.aiName),
+      company: val(LEAD.companyMirror) || val(LEAD.aiCompany),
+      email: val(LEAD.emailMirror) || val(LEAD.aiEmail),
+      phone: val(LEAD.cellPhoneMirror) || val(LEAD.aiPhone),
+      offerPrice: Number.isFinite(price) ? price : null,
+      offerDate: val(LEAD.offerDate),
+      status: val(LEAD.status),
+    };
+  });
+  return mapped.sort((a, b) => (b.offerPrice ?? -1) - (a.offerPrice ?? -1));
+}
+
+/**
+ * Read the listing's linked leads (buyer funnel) for the optional winning-buyer
+ * picker. Errors / no links resolve to [] — the picker simply doesn't render.
+ */
+export async function readListingLeads(listingId: string): Promise<LeadOption[]> {
+  try {
+    const q1 = `query ($id: [ID!]) {
+      items(ids: $id) { column_values(ids: ["${REL.listingToLeads}"]) {
+        ... on BoardRelationValue { linked_item_ids } } } }`;
+    const d1 = await api<{
+      items?: Array<{ column_values: Array<{ linked_item_ids?: string[] | null }> }>;
+    }>(q1, { id: [listingId] });
+    const leadIds = (d1.items?.[0]?.column_values?.[0]?.linked_item_ids ?? []).slice(0, 100);
+    if (leadIds.length === 0) return [];
+
+    const q2 = `query ($ids: [ID!]) {
+      items(ids: $ids) { id name
+        column_values(ids: ["${LEAD.status}", "${LEAD.offerPrice}", "${LEAD.offerDate}", "${LEAD.companyMirror}", "${LEAD.emailMirror}", "${LEAD.cellPhoneMirror}", "${LEAD.aiName}", "${LEAD.aiCompany}", "${LEAD.aiEmail}", "${LEAD.aiPhone}"]) {
+          id text ... on MirrorValue { display_value } } } }`;
+    const d2 = await api<{ items: RawLeadItem[] }>(q2, { ids: leadIds });
+    return mapLeadItems(d2.items ?? []);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('[read] readListingLeads failed — picker hidden', e);
+    return [];
   }
 }
 
